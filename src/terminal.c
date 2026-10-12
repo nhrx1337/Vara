@@ -110,6 +110,10 @@ void create_bash(GtkWidget *terminal, GtkWidget *notebook) {
     command[0] = g_strdup(shell);
     command[1] = NULL;
 
+    vte_terminal_set_scroll_on_output(VTE_TERMINAL(terminal), TRUE);
+    vte_terminal_set_scroll_on_keystroke(VTE_TERMINAL(terminal), TRUE);
+    vte_terminal_set_mouse_autohide(VTE_TERMINAL(terminal), TRUE);
+
     vte_terminal_spawn_async(VTE_TERMINAL(terminal),
         VTE_PTY_DEFAULT,
         NULL,     

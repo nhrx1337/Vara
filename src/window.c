@@ -2,7 +2,7 @@
 #include "../include/terminal.h"
 #include "../include/callback.h"
 
-void add_css(void) {
+void add_css() {
     GtkCssProvider *provider = gtk_css_provider_new();
     gtk_css_provider_load_from_resource(provider, 
             "/io/github/nhrx1337/vara/style.css");
