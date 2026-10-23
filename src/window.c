@@ -16,6 +16,46 @@ void add_css() {
     g_object_unref(provider);
 }
 
+static GtkWidget *find_first_terminal(GtkWidget *widget) {
+    if (VTE_IS_TERMINAL(widget))
+        return widget;
+
+    for (GtkWidget *child = gtk_widget_get_first_child(widget);
+         child != NULL;
+         child = gtk_widget_get_next_sibling(child)) {
+        GtkWidget *terminal = find_first_terminal(child);
+        if (terminal)
+            return terminal;
+    }
+
+    return NULL;
+}
+
+static gboolean focus_current_page(gpointer data) {
+    GtkNotebook *notebook = GTK_NOTEBOOK(data);
+    gint page_num = gtk_notebook_get_current_page(notebook);
+
+    if (page_num >= 0) {
+        GtkWidget *page = gtk_notebook_get_nth_page(notebook, page_num);
+        GtkWidget *terminal = find_first_terminal(page);
+
+        if (terminal)
+            gtk_widget_grab_focus(terminal);
+    }
+
+    return G_SOURCE_REMOVE;
+}
+
+static void on_notebook_switch_page(GtkNotebook *notebook, 
+        GtkWidget *page, guint page_num, gpointer data) {
+    g_idle_add_full(
+        G_PRIORITY_DEFAULT_IDLE,
+        focus_current_page,
+        g_object_ref(notebook),
+        g_object_unref
+    );
+}
+
 void create_tab(GtkWidget *widget, gpointer data) {
     GtkNotebook *notebook = GTK_NOTEBOOK(data); 
 
@@ -26,7 +66,10 @@ void create_tab(GtkWidget *widget, gpointer data) {
     create_bash(terminal, GTK_WIDGET(paned));
 
     gtk_paned_set_start_child(GTK_PANED(paned), terminal);
-    gtk_notebook_append_page(notebook, paned, tab_label);
+    
+    gint page_num = gtk_notebook_append_page(notebook, paned, tab_label);
+    gtk_notebook_set_current_page(notebook, page_num);
+    gtk_widget_grab_focus(terminal);
 }
 
 void split_terminal(GtkNotebook *notebook, GtkOrientation orientation) {
@@ -89,8 +132,10 @@ void activate(GtkApplication *app, gpointer user_data) {
     notebook = GTK_WIDGET(gtk_builder_get_object(builder, "notebook"));
 
     gtk_notebook_set_scrollable(GTK_NOTEBOOK(notebook), TRUE);
-
     gtk_window_set_application(GTK_WINDOW(window), app);
+    
+    g_signal_connect(notebook, "switch-page",
+        G_CALLBACK(on_notebook_switch_page), NULL);
 
     create_tab(NULL, notebook);
 
