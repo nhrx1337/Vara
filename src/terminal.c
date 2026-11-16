@@ -1,6 +1,23 @@
 #include "../include/terminal.h"
 #include "../include/callback.h"
 
+static gchar *last_focused_dir = NULL;
+
+void record_terminal_dir(VteTerminal *terminal) {
+    GUri *uri = vte_terminal_ref_termprop_uri(
+        terminal, VTE_TERMPROP_CURRENT_DIRECTORY_URI);
+    if (!uri)
+        return;
+
+    const gchar *path = g_uri_get_path(uri);
+    if (path && *path) {
+        g_free(last_focused_dir);
+        last_focused_dir = g_strdup(path);
+    }
+
+    g_uri_unref(uri);
+}
+
 void increase_font(VteTerminal *terminal) {
     vte_terminal_set_font_scale(VTE_TERMINAL(terminal), 
             vte_terminal_get_font_scale(VTE_TERMINAL(terminal)) + SCALE_FACTOR);
@@ -106,6 +123,8 @@ void create_bash(GtkWidget *terminal, GtkWidget *notebook) {
         shell = "/bin/sh";
     }
 
+    const gchar *working_directory = last_focused_dir;
+
     gchar *command[2];
     command[0] = g_strdup(shell);
     command[1] = NULL;
@@ -116,7 +135,7 @@ void create_bash(GtkWidget *terminal, GtkWidget *notebook) {
 
     vte_terminal_spawn_async(VTE_TERMINAL(terminal),
         VTE_PTY_DEFAULT,
-        NULL,     
+        working_directory,     
         command,    
         envp,
         (GSpawnFlags)0,         

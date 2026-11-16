@@ -112,13 +112,18 @@ void on_termprop_changed(VteTerminal *terminal,
         return;
 
     update_tab_label(terminal);
+
+    if (gtk_widget_has_focus(GTK_WIDGET(terminal)))
+        record_terminal_dir(terminal);
 }
 
 void on_terminal_focus_changed(GObject *object, GParamSpec *pspec, gpointer data) {
     VteTerminal *terminal = VTE_TERMINAL(object);
 
-    if (gtk_widget_has_focus(GTK_WIDGET(terminal)))
+    if (gtk_widget_has_focus(GTK_WIDGET(terminal))) {
         update_tab_label(terminal);
+        record_terminal_dir(terminal);
+    }
 }
 
 static void switch_tab(GtkNotebook *notebook, int direction) {

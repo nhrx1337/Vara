@@ -10,5 +10,6 @@ void set_terminal_colors(VteTerminal *terminal);
 void set_terminal_font(VteTerminal *terminal);
 void create_bash(GtkWidget *terminal, GtkWidget *notebook);
 void update_tab_label(VteTerminal *terminal);
+void record_terminal_dir(VteTerminal *terminal);
 
 #endif // TERMINAL_H
